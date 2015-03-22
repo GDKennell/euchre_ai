@@ -7,6 +7,10 @@
 
 using namespace std;
 
+const int alone_threshold = 20.0;
+
+const int call_it_threshold = 16.0;
+
 enum player_position_t {THIS_PLAYER, LEFT_OPPONENT, PARTNER, RIGHT_OPPONENT};
 void increment_position(player_position_t &position);
 
@@ -49,10 +53,14 @@ Deck::Deck() {
   reset();
 }
 
+int my_random(int i) {
+  return rand() % i;
+}
+
 void Deck::shuffle() {
   reset();
-  srand(time(NULL));
-  random_shuffle(cards.begin(), cards.end());
+  srand ( unsigned ( std::time(0) ) );
+  random_shuffle(cards.begin(), cards.end(), my_random);
 }
 
 deque<card_t> Deck::draw(int num_cards) {
@@ -97,11 +105,19 @@ double trump_evaluation(const hand_t &hand,
 
 const char* card_str(const card_t &card);
 
+struct trump_decision_state_t {
+  hand_t hand;
+  card_t flip_card;
+  player_position_t dealer;
+  trump_call_t human_call;
+  double heuristic_eval;
+};
+
 int main() {
   Deck deck;
 
   player_position_t dealer = THIS_PLAYER;
-  deque<pair<trump_call_t, double> > data_pairs(NUM_TEST_HANDS);
+  deque<trump_decision_state_t> data_pairs(NUM_TEST_HANDS);
   for (int i = 0; i < NUM_TEST_HANDS; ++i) {
     deck.shuffle();
     hand_t hand = deck.draw(5);
@@ -110,17 +126,58 @@ int main() {
 
     trump_call_t human_call = input_trump_decision(hand, flip_card, dealer);
     double heuristic_eval = trump_evaluation(hand, flip_card, dealer);
+    trump_call_t comp_call = PASS;
+    if (heuristic_eval > call_it_threshold)
+      comp_call = PICK_IT_UP;
+    if (heuristic_eval > alone_threshold)
+      comp_call = ALONE;
+    if (comp_call == human_call)
+      cout<<"I agree"<<endl<<endl;
+    else {
+      switch(comp_call){
+        case PASS:
+          cout<<"I think we should pass";
+          break;
+        case PICK_IT_UP:
+          cout<<"I think we should order it up";
+          break;
+        case ALONE:
+          cout<<"I think we should go alone";
+          break;
+      }
+      cout<<endl<<endl;
+    }
 
-    data_pairs[i] = make_pair(human_call, heuristic_eval);
+    data_pairs[i].hand = hand;
+    data_pairs[i].flip_card = flip_card;
+    data_pairs[i].dealer = dealer;
+    data_pairs[i].human_call = human_call;
+    data_pairs[i].heuristic_eval = heuristic_eval;
 
     increment_position(dealer);
   }
 
   ofstream csv_out;
-  csv_out.open("trump_call_data.csv");
+  csv_out.open("trump_call_data.csv", fstream::out | fstream::app);
 
   for(int i = 0; i < NUM_TEST_HANDS; ++i) {
-    csv_out<<data_pairs[i].second<<','<<trump_call_names[data_pairs[i].first]<<endl;
+    csv_out<<data_pairs[i].heuristic_eval<<','<<trump_call_names[data_pairs[i].human_call]<<',';
+    csv_out<<card_str(data_pairs[i].flip_card)<<',';
+    switch (data_pairs[i].dealer) {
+      case THIS_PLAYER:
+        csv_out<<"Your deal";
+        break;
+      case PARTNER:
+        csv_out<<"Your partner's deal";
+      break;
+      default:
+        csv_out<<"Opponent's deal";
+        break;
+    } 
+    for (int j = 0; j < 5; ++j) {
+      csv_out<<','<<card_str(data_pairs[i].hand[j]);
+    }
+    csv_out<<endl;
   }
   csv_out.close();
 }
