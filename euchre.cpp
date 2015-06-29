@@ -4,6 +4,7 @@
 #include <deque>
 #include <vector>
 
+#include "ai.h"
 #include "data_structures.h"
 
 using namespace std;
@@ -78,15 +79,10 @@ trump_call_t input_trump_decision(const hand_t &hand,
 const int NUM_TEST_HANDS = 20;
 
 bool is_trump(card_t card, suit_t trump);
-double card_value(card_t card, suit_t trump);
 
 void display_hand(const hand_t &hand, 
                   card_t flip_card, 
                   player_position_t dealer);
-
-double trump_evaluation(const hand_t &hand, 
-                        card_t flip_card, 
-                        player_position_t dealer);
 
 int main() {
   Deck deck;
