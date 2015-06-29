@@ -8,9 +8,9 @@
 
 using namespace std;
 
-const int alone_threshold = 23.0;
+const double alone_threshold = 23.0;
 
-const int call_it_threshold = 16.0;
+const double call_it_threshold = 16.0;
 
 class Deck {
   public:
@@ -102,9 +102,9 @@ int main() {
     trump_call_t human_call = input_trump_decision(hand, flip_card, dealer);
     double heuristic_eval = trump_evaluation(hand, flip_card, dealer);
     trump_call_t comp_call = PASS;
-    if (heuristic_eval > call_it_threshold)
+    if (heuristic_eval >= call_it_threshold)
       comp_call = PICK_IT_UP;
-    if (heuristic_eval > alone_threshold)
+    if (heuristic_eval >= alone_threshold)
       comp_call = ALONE;
     cout<<"Evaluation: "<<heuristic_eval<<endl;
     if (comp_call == human_call)
@@ -158,23 +158,6 @@ int main() {
   csv_out.close();
 }
 
-void increment_position(player_position_t &position) {
-  switch (position) {
-    case THIS_PLAYER:
-      position = LEFT_OPPONENT;
-      break;
-    case LEFT_OPPONENT:
-      position = PARTNER;
-      break;
-    case PARTNER: 
-      position = RIGHT_OPPONENT;
-      break;
-    case RIGHT_OPPONENT:
-      position = THIS_PLAYER;
-      break;
-  }
-}
-
 trump_call_t input_trump_decision(const hand_t &hand, 
                                   card_t flip_card, 
                                   player_position_t dealer) {
@@ -193,10 +176,6 @@ trump_call_t input_trump_decision(const hand_t &hand,
   }
   cout<<"You didn't give me 'p' 'o' or 'a' you knuckle head!"<<endl;
   throw "a tantrum";
-}
-
-const char* card_str(const card_t &card) {
- return string(string(card_value_names[card.value]) + string(" of ") + suit_names[card.suit]).c_str(); 
 }
 
 bool card_compare(card_t card1, card_t card2, suit_t trump) {

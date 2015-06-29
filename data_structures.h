@@ -6,13 +6,13 @@
 enum player_position_t {THIS_PLAYER, LEFT_OPPONENT, PARTNER, RIGHT_OPPONENT};
 void increment_position(player_position_t &position);
 
-const char *trump_call_names[3] = {"Pass", "Pick it up", "Alone"};
+extern const char *trump_call_names[3];
 enum trump_call_t {PASS, PICK_IT_UP, ALONE};
 
-const char *suit_names[4] = {"Clubs", "Diamonds", "Hearts", "Spades"};
+extern const char *suit_names[4];
 enum suit_t {CLUBS, DIAMONDS, HEARTS, SPADES};
 
-const char *card_value_names[6] = {"9 ", "10", "J ", "Q ", "K ", "A "};
+extern const char *card_value_names[6];
 enum card_value_t {NINE, TEN, JACK, QUEEN, KING, ACE};
 
 struct card_t {
