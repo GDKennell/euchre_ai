@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const int alone_threshold = 20.0;
+const int alone_threshold = 23.0;
 
 const int call_it_threshold = 16.0;
 
@@ -95,6 +95,9 @@ trump_call_t input_trump_decision(const hand_t &hand,
 
 const int NUM_TEST_HANDS = 20;
 
+bool is_trump(card_t card, suit_t trump);
+double card_value(card_t card, suit_t trump);
+
 void display_hand(const hand_t &hand, 
                   card_t flip_card, 
                   player_position_t dealer);
@@ -131,6 +134,7 @@ int main() {
       comp_call = PICK_IT_UP;
     if (heuristic_eval > alone_threshold)
       comp_call = ALONE;
+    cout<<"Evaluation: "<<heuristic_eval<<endl;
     if (comp_call == human_call)
       cout<<"I agree"<<endl<<endl;
     else {
@@ -223,6 +227,37 @@ const char* card_str(const card_t &card) {
  return string(string(card_value_names[card.value]) + string(" of ") + suit_names[card.suit]).c_str(); 
 }
 
+bool card_compare(card_t card1, card_t card2, suit_t trump) {
+  if (is_trump(card1, trump) && !is_trump(card2, trump)) {
+    return true;
+  }
+  else if (is_trump(card2, trump) && !is_trump(card1, trump)) {
+    return false;
+  }
+  if (is_trump(card1,trump) && is_trump(card2,trump)) {
+    return card_value(card1,trump) > card_value(card2,trump);
+  }
+  else if(card1.suit == card2.suit) {
+    return card1.value > card2.value;
+  }
+  else {
+    return card1.suit > card2.suit;
+  }
+}
+
+hand_t sort_hand(const hand_t& hand, suit_t trump) {
+  hand_t sorted_hand = hand;
+  for (int i = 1; i < 5; ++i) {
+    for (int j = i-1; j >= 0; --j) {
+      if (card_compare(sorted_hand[j+1],sorted_hand[j],trump))
+        swap(sorted_hand[j+1],sorted_hand[j]);
+      else
+        break;
+    }
+  }
+  return sorted_hand;
+}
+
 void display_hand(const hand_t &hand, 
                   card_t flip_card, 
                   player_position_t dealer) {
@@ -240,8 +275,9 @@ void display_hand(const hand_t &hand,
   cout<<"Flip Card: "<<card_str(flip_card)<<endl;
 
   cout<<"Hand:"<<endl;
+  hand_t sorted_hand = sort_hand(hand, flip_card.suit);
   for (int i = 0; i < 5; ++i) {
-    cout<<"\t[ "<<card_str(hand[i])<<" ]"<<endl;
+    cout<<"\t[ "<<card_str(sorted_hand[i])<<" ]"<<endl;
   }
   cout<<endl;
 }
@@ -257,17 +293,30 @@ bool is_trump(card_t card, suit_t trump) {
 }
 
 double card_value(card_t card, suit_t trump) {
-  if (!is_trump(card, trump))
-    return 0.5 * (double)card.value;
+  if (is_trump(card, trump)) {
+    double raw_value;
+    if (card.value == JACK && card.suit == trump)
+      raw_value = ACE + 3.0;
+    else if (card.value == JACK && card.suit != trump)
+      raw_value = ACE + 1.0;
+    else if (card.value >= QUEEN)
+      raw_value = card.value;
+    else
+      raw_value = card.value + 1.0;
 
-  if (card.suit == trump && card.value == JACK)
-    return (double)ACE + 2.0;
-  else if (card.suit != trump && card.value == JACK)
-    return (double)ACE + 1.0;
-  else if (card.value <= TEN)
-    return (double)card.value + 1.0;
-  else
-    return (double)card.value;
+    return raw_value + 1.0;
+  }
+  else {
+    if (card.value == ACE) {
+      return 3.0;
+    }
+    else if (card.value == KING) {
+      return 1.0;
+    }
+    else {
+      return 0.0;
+    }
+  }
 }
 
 void swap_card(hand_t &hand, card_t flip_card) {
