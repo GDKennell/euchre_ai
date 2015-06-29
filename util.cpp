@@ -107,3 +107,8 @@ trump_call_t input_trump_decision(const hand_t &hand,
   throw "a tantrum";
 }
 
+int my_random(int i) {
+  return rand() % i;
+}
+
+

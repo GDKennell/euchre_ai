@@ -14,3 +14,6 @@ trump_call_t input_trump_decision(const hand_t &hand,
                                   card_t flip_card, 
                                   player_position_t dealer);
 
+// returns random number between 0 and i-1 (inclusive)
+int my_random(int i);
+
