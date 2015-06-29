@@ -1,34 +1,16 @@
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <deque>
 #include <vector>
 
-#include <algorithm>
+#include "data_structures.h"
 
 using namespace std;
 
 const int alone_threshold = 23.0;
 
 const int call_it_threshold = 16.0;
-
-enum player_position_t {THIS_PLAYER, LEFT_OPPONENT, PARTNER, RIGHT_OPPONENT};
-void increment_position(player_position_t &position);
-
-const char *trump_call_names[3] = {"Pass", "Pick it up", "Alone"};
-enum trump_call_t {PASS, PICK_IT_UP, ALONE};
-
-const char *suit_names[4] = {"Clubs", "Diamonds", "Hearts", "Spades"};
-enum suit_t {CLUBS, DIAMONDS, HEARTS, SPADES};
-
-const char *card_value_names[6] = {"9 ", "10", "J ", "Q ", "K ", "A "};
-enum card_value_t {NINE, TEN, JACK, QUEEN, KING, ACE};
-
-struct card_t {
-  suit_t suit;
-  card_value_t value;
-};
-
-typedef deque<card_t> hand_t;
 
 class Deck {
   public:
@@ -105,16 +87,6 @@ void display_hand(const hand_t &hand,
 double trump_evaluation(const hand_t &hand, 
                         card_t flip_card, 
                         player_position_t dealer);
-
-const char* card_str(const card_t &card);
-
-struct trump_decision_state_t {
-  hand_t hand;
-  card_t flip_card;
-  player_position_t dealer;
-  trump_call_t human_call;
-  double heuristic_eval;
-};
 
 int main() {
   Deck deck;
