@@ -9,10 +9,6 @@
 
 using namespace std;
 
-const double alone_threshold = 23.0;
-
-const double call_it_threshold = 16.0;
-
 class Deck {
   public:
     // Initializes deck in order and full
@@ -96,13 +92,7 @@ int main() {
     card_t flip_card = deck.draw();
 
     trump_call_t human_call = input_trump_decision(hand, flip_card, dealer);
-    double heuristic_eval = trump_evaluation(hand, flip_card, dealer);
-    trump_call_t comp_call = PASS;
-    if (heuristic_eval >= call_it_threshold)
-      comp_call = PICK_IT_UP;
-    if (heuristic_eval >= alone_threshold)
-      comp_call = ALONE;
-    cout<<"Evaluation: "<<heuristic_eval<<endl;
+    trump_call_t comp_call = calculate_trump_call(hand, flip_card, dealer);
     if (comp_call == human_call)
       cout<<"I agree"<<endl<<endl;
     else {
@@ -124,7 +114,7 @@ int main() {
     data_pairs[i].flip_card = flip_card;
     data_pairs[i].dealer = dealer;
     data_pairs[i].human_call = human_call;
-    data_pairs[i].heuristic_eval = heuristic_eval;
+    data_pairs[i].heuristic_eval = 0.0;
 
     increment_position(dealer);
   }
@@ -239,52 +229,6 @@ bool is_trump(card_t card, suit_t trump) {
   return card.suit == trump;
 }
 
-double card_value(card_t card, suit_t trump) {
-  if (is_trump(card, trump)) {
-    double raw_value;
-    if (card.value == JACK && card.suit == trump)
-      raw_value = ACE + 3.0;
-    else if (card.value == JACK && card.suit != trump)
-      raw_value = ACE + 1.0;
-    else if (card.value >= QUEEN)
-      raw_value = card.value;
-    else
-      raw_value = card.value + 1.0;
-
-    return raw_value + 1.0;
-  }
-  else {
-    if (card.value == ACE) {
-      return 3.0;
-    }
-    else if (card.value == KING) {
-      return 1.0;
-    }
-    else {
-      return 0.0;
-    }
-  }
-}
-
-void swap_card(hand_t &hand, card_t flip_card) {
-  suit_t trump = flip_card.suit;
-
-  int worst_i = 0;
-  card_t worst_card = hand[0];
-  for (int i = 1; i < 5; ++i) {
-    if (is_trump(worst_card, trump) 
-        && !is_trump(hand[i], trump)) {
-      worst_card = hand[i];
-      worst_i = i;
-    }
-    else if (card_value(hand[i],trump) < card_value(worst_card,trump)) {
-      worst_card = hand[i];
-      worst_i = i;
-    }
-  }
-  hand[worst_i] = flip_card;
-}
-
 suit_t swap_color (suit_t suit) {
    switch (suit) {
       case HEARTS:
@@ -300,43 +244,6 @@ suit_t swap_color (suit_t suit) {
 
 bool is_left(const card_t &card, suit_t trump) {
   return (card.value == JACK && swap_color(card.suit) == trump);
-}
-
-double trump_evaluation(const hand_t &hand, 
-                        card_t flip_card, 
-                        player_position_t dealer) {
-  double total_value = 0.0;
-  suit_t trump = flip_card.suit;
-  hand_t test_hand(hand);
-  if (dealer == THIS_PLAYER) {
-    swap_card(test_hand,flip_card);
-  }
-  else if (dealer == PARTNER) {
-    total_value += card_value(flip_card, trump);
-  }
-  else {
-    total_value -= card_value(flip_card, trump);
-  }
-
-  bool suit_exists[4] = {false, false, false, false};
-  int num_suits = 0;
-  for (int i = 0; i < 5; ++i) {
-    card_t card = test_hand[i];
-    total_value += card_value(card, trump);
-
-    suit_t card_suit = is_left(card, trump) ? swap_color(card.suit) : card.suit;
-    if (!suit_exists[card_suit]) {
-      suit_exists[card_suit] = true;
-      ++num_suits;
-    }
-  }
-  
-  if (suit_exists[trump]) {
-    total_value += 4.0 - (double)num_suits;
-  }
-
-
-  return total_value;
 }
 
 

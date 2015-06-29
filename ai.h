@@ -3,14 +3,15 @@
 
 #include "data_structures.h"
 
-double trump_evaluation(const hand_t &hand, 
-                        card_t flip_card, 
-                        player_position_t dealer);
+extern const double alone_threshold;
+extern const double call_it_threshold;
 
-// remove worst card from hand and insert the flip card
-void swap_card(hand_t &hand, card_t flip_card);
+trump_call_t calculate_trump_call(const hand_t &hand, 
+                                  card_t flip_card, 
+                                  player_position_t dealer);
 
 // returns heuristic value of card given trump
+// TODO: will soon move back to top of ai.cpp - this should be private
 double card_value(card_t card, suit_t trump);
 
 #endif
