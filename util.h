@@ -10,3 +10,7 @@ void display_hand(const hand_t &hand,
                   card_t flip_card, 
                   player_position_t dealer);
 
+trump_call_t input_trump_decision(const hand_t &hand, 
+                                  card_t flip_card, 
+                                  player_position_t dealer);
+
