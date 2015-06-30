@@ -2,7 +2,7 @@
 #define DATA_STRUCTURES_H
 
 #include <deque>
-
+extern const char *player_position_names[4];
 enum player_position_t {THIS_PLAYER, LEFT_OPPONENT, PARTNER, RIGHT_OPPONENT};
 void increment_position(player_position_t &position);
 
@@ -12,6 +12,7 @@ enum trump_call_t {PASS, PICK_IT_UP, ALONE};
 extern const char *suit_names[4];
 enum suit_t {CLUBS, DIAMONDS, HEARTS, SPADES};
 
+const int NUM_SUITS = 4;
 extern const char *card_value_names[6];
 enum card_value_t {NINE, TEN, JACK, QUEEN, KING, ACE};
 
@@ -23,12 +24,10 @@ const char* card_str(const card_t &card);
 
 typedef std::deque<card_t> hand_t;
 
-struct trump_decision_state_t {
-  hand_t hand;
-  card_t flip_card;
-  player_position_t dealer;
-  trump_call_t human_call;
-  double heuristic_eval;
+struct trump_decision_t {
+  trump_call_t call_type;
+  suit_t suit;
+  player_position_t caller;
 };
 
 #endif

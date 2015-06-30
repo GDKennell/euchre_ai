@@ -1,6 +1,9 @@
 all: euchre.cpp data_structures.o ai.o util.o deck.o
 	g++ euchre.cpp data_structures.o ai.o util.o deck.o -g --std=c++11 -o Euchre
 
+trump_test: trump_call_test.cpp data_structures.o ai.o util.o deck.o
+	g++ trump_call_test.cpp data_structures.o ai.o util.o deck.o -g --std=c++11 -o TrumpTest
+
 data_structures.o: data_structures.cpp data_structures.h
 	g++ -g -c data_structures.cpp
 

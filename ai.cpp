@@ -14,19 +14,51 @@ void swap_card(hand_t &hand, card_t flip_card);
 
 
 double trump_evaluation(const hand_t &hand, 
+                        suit_t trump);
+
+double trump_evaluation(const hand_t &hand, 
                         card_t flip_card, 
                         player_position_t dealer);
 
-trump_call_t calculate_trump_call(const hand_t &hand, 
-                                  card_t flip_card, 
-                                  player_position_t dealer) {
+trump_decision_t calculate_first_trump_call(const hand_t &hand, 
+                                            card_t flip_card, 
+                                            player_position_t dealer) {
+    trump_decision_t decision;
     double heuristic_eval = trump_evaluation(hand, flip_card, dealer);
     cout<<"Evaluation: "<<heuristic_eval<<endl;
     if (heuristic_eval >= alone_threshold)
-      return ALONE;
+      decision.call_type = ALONE;
     if (heuristic_eval >= call_it_threshold)
-      return PICK_IT_UP;
-    return PASS;
+      decision.call_type = PICK_IT_UP;
+    else
+      decision.call_type = PASS;
+    return decision;
+}
+
+trump_decision_t calculate_second_trump_call(const hand_t &hand,
+                                             card_t flip_card, 
+                                             bool must_choose) {
+    trump_decision_t decision;
+    int best_suit_i = -1;
+    double best_suit_eval = 0.0;
+    for (int suit_i = 0; suit_i < NUM_SUITS; ++suit_i) {
+      suit_t possible_suit = (suit_t)suit_i;
+      if (possible_suit == flip_card.suit)
+        continue;
+      double this_suit_eval = trump_evaluation(hand, possible_suit);
+      if (best_suit_i == -1 || best_suit_eval < this_suit_eval) {
+        best_suit_i = suit_i;
+        best_suit_eval = this_suit_eval;
+      }
+    }
+    decision.suit = (suit_t)best_suit_i;
+    if (best_suit_eval >= alone_threshold)
+      decision.call_type = ALONE;
+    else if (must_choose || best_suit_eval >= call_it_threshold)
+      decision.call_type = PICK_IT_UP;
+    else
+      decision.call_type = PASS;
+    return decision;
 }
 
 double trump_evaluation(const hand_t &hand, 
@@ -45,10 +77,18 @@ double trump_evaluation(const hand_t &hand,
     total_value -= card_value(flip_card, trump);
   }
 
+  total_value += trump_evaluation(test_hand, trump);
+  return total_value;
+}
+
+double trump_evaluation(const hand_t &hand, 
+                        suit_t trump) {
+  double total_value = 0.0;
+
   bool suit_exists[4] = {false, false, false, false};
   int num_suits = 0;
   for (int i = 0; i < 5; ++i) {
-    card_t card = test_hand[i];
+    card_t card = hand[i];
     total_value += card_value(card, trump);
 
     suit_t card_suit = is_left(card, trump) ? swap_color(card.suit) : card.suit;
@@ -61,7 +101,6 @@ double trump_evaluation(const hand_t &hand,
   if (suit_exists[trump]) {
     total_value += 4.0 - (double)num_suits;
   }
-
 
   return total_value;
 }

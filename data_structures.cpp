@@ -4,6 +4,7 @@
 
 using namespace std;
 
+const char *player_position_names[4] = {"This Player", "Left Opponent", "Partner", "Right Opponent"};
 const char *trump_call_names[3] = {"Pass", "Pick it up", "Alone"};
 const char *suit_names[4] = {"Clubs", "Diamonds", "Hearts", "Spades"};
 const char *card_value_names[6] = {"9 ", "10", "J ", "Q ", "K ", "A "};
