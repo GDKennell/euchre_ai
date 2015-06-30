@@ -28,7 +28,7 @@ trump_decision_t calculate_first_trump_call(const hand_t &hand,
     cout<<"Evaluation: "<<heuristic_eval<<endl;
     if (heuristic_eval >= alone_threshold)
       decision.call_type = ALONE;
-    if (heuristic_eval >= call_it_threshold)
+    else if (heuristic_eval >= call_it_threshold)
       decision.call_type = PICK_IT_UP;
     else
       decision.call_type = PASS;

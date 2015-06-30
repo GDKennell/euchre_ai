@@ -82,7 +82,8 @@ card_t input_card() {
   do {
     if (bad_input) {
       cout<<"Cannot process input. Correct format: <9/10/j/q/k/a>/<c/d/h/s>"<<endl;
-      cout<<"input again\n\t";
+      cout<<"input again\n\t:";
+      getline(cin, card_input_str);
       bad_input = false;
     }
     switch (card_input_str[0]) {
@@ -157,15 +158,15 @@ trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t d
     else {
       bool bad_input = false;
       do {
+        string input;
         if (bad_input) {
           cout<<"Bad input, try again"<<endl;
           bad_input = false;
         }
         cout<<"Trump decision of "<<player_position_names[current_player]<<":"<<endl;
         cout<<"\t[p]ass, [o]der up, or [a]lone: ";
-        char ch;
-        cin >> ch;
-        switch (ch) {
+        getline(cin,input);
+        switch (input[0]) {
           case 'p':
             continue;
           case 'o':
@@ -192,7 +193,12 @@ trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t d
       if (comp_decision.call_type == PICK_IT_UP ||
           comp_decision.call_type == ALONE) {
         comp_decision.caller = current_player;
+        cout<<"My decision: "<<trump_call_names[comp_decision.call_type];
+        cout<<": "<<suit_names[comp_decision.suit]<<endl;
         return comp_decision;
+      }
+      else {
+        cout<<"My decision: Pass"<<endl;
       }
     }
     else {
@@ -232,6 +238,7 @@ trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t d
         }
       } while(bad_input);
     }
+    increment_position(current_player);
   }
   cout<<"Error: somehow managed to get thru with no one calling anything"<<endl;
   exit(1);
