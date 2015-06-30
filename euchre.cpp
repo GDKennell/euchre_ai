@@ -14,7 +14,7 @@ card_t input_flip_card();
 card_t input_card();
 
 // Gameplay Helpers
-trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t dealer);
+trump_decision_t decide_trump(hand_t &hand, card_t flip_card, player_position_t dealer);
 // Plays out trick with first_player playing first. returns which player takes the trick
 player_position_t play_trick(hand_t hand, suit_t trump_suit, player_position_t first_player);
 
@@ -130,7 +130,7 @@ card_t input_card() {
 }
 
 // Gameplay Helpers
-trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t dealer) {
+trump_decision_t decide_trump(hand_t &hand, card_t flip_card, player_position_t dealer) {
   player_position_t current_player = dealer;
   increment_position(current_player);
 
@@ -145,11 +145,16 @@ trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t d
     if (current_player == THIS_PLAYER) {
       trump_decision_t comp_decision = calculate_first_trump_call(hand, flip_card, dealer);
       cout<<"My decision: "<<trump_call_names[comp_decision.call_type]<<endl;
+
       if (comp_decision.call_type == PICK_IT_UP) {
+        if (dealer == THIS_PLAYER)
+          swap_card(hand, flip_card);
         decision.call_type = PICK_IT_UP;
         return decision;
       }
       else if (comp_decision.call_type == ALONE) {
+        if (dealer == THIS_PLAYER)
+          swap_card(hand, flip_card);
         decision.call_type = ALONE;
         return decision;
       }
@@ -170,9 +175,13 @@ trump_decision_t decide_trump(hand_t hand, card_t flip_card, player_position_t d
           case 'p':
             continue;
           case 'o':
+          if (dealer == THIS_PLAYER)
+            swap_card(hand, flip_card);
             decision.call_type = PICK_IT_UP;
             return decision;
           case 'a':
+          if (dealer == THIS_PLAYER)
+            swap_card(hand, flip_card);
             decision.call_type = ALONE;
             return decision;
           default:

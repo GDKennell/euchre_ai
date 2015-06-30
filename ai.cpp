@@ -111,16 +111,64 @@ void swap_card(hand_t &hand, card_t flip_card) {
   int worst_i = 0;
   card_t worst_card = hand[0];
   for (int i = 1; i < 5; ++i) {
-    if (is_trump(worst_card, trump) 
-        && !is_trump(hand[i], trump)) {
-      worst_card = hand[i];
-      worst_i = i;
+    if (is_trump(worst_card, trump)) {
+      if (is_trump(hand[i], trump)) {
+        if (card_value(hand[i],trump) < card_value(worst_card,trump)) {
+          worst_card = hand[i];
+          worst_i = i;
+        }
+      }
+      else {
+        worst_card = hand[i];
+        worst_i = i;
+      }
+      continue;
     }
-    else if (card_value(hand[i],trump) < card_value(worst_card,trump)) {
+    else if (!is_trump(hand[i], trump) &&
+          hand[i].value < worst_card.value) {
       worst_card = hand[i];
       worst_i = i;
     }
   }
+
+  // Now have worst_card figured out
+  // First looking to see if we can short-suit ourselves before using it
+
+  int suit_counts[] = {0,0,0,0};
+  for (int i = 0; i < 5; ++i) {
+    if (!is_trump(hand[i],trump)) {
+      ++suit_counts[hand[i].suit];
+    }
+  }
+  
+  // Array of card indices that could be discarded to short-suit ourselves
+  deque<int> short_suit_cards;
+  for (int i = 0; i < 4; ++i) {
+    if (suit_counts[i] == 1) {
+      // Find card that is only one of i suit
+      for (int j = 0; j < 5; ++j) {
+        if (hand[j].suit == (suit_t)i) {
+          short_suit_cards.push_back(j);
+          break;
+        }
+      }
+    }
+  }
+
+  // Find lowest value short-suiting card
+  if (!short_suit_cards.empty()) {
+    worst_i = 0;
+    worst_card = hand[short_suit_cards[0]];
+    for (int i = 1; i < short_suit_cards.size(); ++i) {
+      if (hand[short_suit_cards[i]].value < worst_card.value) {
+        worst_i = i;
+        worst_card = hand[short_suit_cards[i]];
+      }
+    }
+
+  }
+  cout<<"Swapping worst card, "<<card_str(worst_card);
+  cout<<" for flip card "<<card_str(flip_card)<<endl;
   hand[worst_i] = flip_card;
 }
 
