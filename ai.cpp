@@ -2,6 +2,7 @@
 
 #include "ai.h"
 #include "data_structures.h"
+#include "GameState.h"
 #include "util.h"
 
 using namespace std;
@@ -61,6 +62,67 @@ trump_decision_t calculate_second_trump_call(const hand_t &hand,
     return decision;
 }
 
+card_t calculate_move(GameState &game_state, hand_t &hand, suit_t trump_suit) {
+  if (game_state.leading_player() == THIS_PLAYER) {
+    // Leading
+    // Highest offsuit card(s), multiple only if tie
+    deque<card_t> highest_offsuit_cards = find_highest_offsuit(hand, trump_suit);
+
+    if (highest_offsuit_cards.empty()) {
+      // if only trump in hand
+      card_t highest_trump = find_highest_trump(hand, trump_suit);
+      card_t lowest_trump = find_lowest_trump(hand, trump_suit);
+      if (card_value(game_state.highest_unplayed_trump(), trump_suit) <
+          card_value(highest_trump)) {
+        // play that highest trump if we have it
+        remove_card(highest_trump, hand);
+        return highest_trump;
+      }
+      else {
+        // else play lowest trump
+        remove_card(lowest_trump, hand);
+        return lowest_trump;
+      }
+    }
+    else {
+      // Find highest_offsuit card with lowest # of cards in its suit
+      // count of cards in suit, indexed by highest_offsuit_cards
+      deque<int> suit_counts = count_suits(highest_offsuit_cards, hand);
+      int best_card_i = find_min_index(suit_counts);
+      card_t best_card = highest_offsuit_cards[best_card_i];
+      remove_card(best_card, hand);
+      return best_card;
+    }
+  }
+  else {
+    // Following
+    suit_t trick_suit = game_state.trick_suit();
+    deque<card_t> legal_cards = legal_cards(hand, trick_suit);
+    deque<card_t> winnable_cards = game_state.winnable_cards(legal_cards);
+    if (winnable_cards.empty() || game_state.partner_is_winning_trick()) { 
+      // If no way to win trick or partner has it, play lowest legal
+      worst_legal_card = find_lowest_card(legal_cards, trump_suit);
+      remove_card(worst_legal_card, hand);
+      return worst_legal_card;
+    }
+    else {
+      // If can win
+      if (effective_suit(legal_cards.first()) == trick_suit) {
+        // If can win following suit, play highest of suit (trump included)
+        highest_winnable_card = find_highest_card(winnable_cards, trump_suit);
+        remove_card(highest_winnable_card, hand);
+        return highest_winnable_card;
+      }
+      else {
+        // If can win by trumping (playing trump on offsuit trick), play lowest trump
+        lowest_winnable_card = find_lowest_card(winnable_cards, trump_suit);
+        remove_card(lowest_winnable_card, hand);
+        return lowest_winnable_card;
+      }
+    }
+  }
+}
+
 double trump_evaluation(const hand_t &hand, 
                         card_t flip_card, 
                         player_position_t dealer) {
@@ -91,8 +153,7 @@ double trump_evaluation(const hand_t &hand,
     card_t card = hand[i];
     total_value += card_value(card, trump);
 
-    suit_t card_suit = is_left(card, trump) ? swap_color(card.suit) : card.suit;
-    if (!suit_exists[card_suit]) {
+    if (!suit_exists[effective_suit(card)]) {
       suit_exists[card_suit] = true;
       ++num_suits;
     }
@@ -108,39 +169,16 @@ double trump_evaluation(const hand_t &hand,
 void swap_card(hand_t &hand, card_t flip_card) {
   suit_t trump = flip_card.suit;
 
-  int worst_i = 0;
-  card_t worst_card = hand[0];
-  for (int i = 1; i < 5; ++i) {
-    if (is_trump(worst_card, trump)) {
-      if (is_trump(hand[i], trump)) {
-        if (card_value(hand[i],trump) < card_value(worst_card,trump)) {
-          worst_card = hand[i];
-          worst_i = i;
-        }
-      }
-      else {
-        worst_card = hand[i];
-        worst_i = i;
-      }
-      continue;
-    }
-    else if (!is_trump(hand[i], trump) &&
-          hand[i].value < worst_card.value) {
-      worst_card = hand[i];
-      worst_i = i;
-    }
-  }
+  card_t worst_card = find_lowest_card(hand, trump);
 
-  // Now have worst_card figured out
   // First looking to see if we can short-suit ourselves before using it
-
   int suit_counts[] = {0,0,0,0};
   for (int i = 0; i < 5; ++i) {
     if (!is_trump(hand[i],trump)) {
       ++suit_counts[hand[i].suit];
     }
   }
-  
+
   // Array of card indices that could be discarded to short-suit ourselves
   deque<int> short_suit_cards;
   for (int i = 0; i < 4; ++i) {
@@ -157,19 +195,13 @@ void swap_card(hand_t &hand, card_t flip_card) {
 
   // Find lowest value short-suiting card
   if (!short_suit_cards.empty()) {
-    worst_i = 0;
-    worst_card = hand[short_suit_cards[0]];
-    for (int i = 1; i < short_suit_cards.size(); ++i) {
-      if (hand[short_suit_cards[i]].value < worst_card.value) {
-        worst_i = i;
-        worst_card = hand[short_suit_cards[i]];
-      }
-    }
-
+    worst_card = find_lowest_card(short_suit_cards, trump);
   }
+
   cout<<"Swapping worst card, "<<card_str(worst_card);
   cout<<" for flip card "<<card_str(flip_card)<<endl;
-  hand[worst_i] = flip_card;
+  remove_card(worst_card, hand);
+  hand.push_back(flip_card);
 }
 
 double card_value(card_t card, suit_t trump) {

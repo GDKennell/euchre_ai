@@ -16,10 +16,11 @@ card_t input_card();
 // Gameplay Helpers
 trump_decision_t decide_trump(hand_t &hand, card_t flip_card, player_position_t dealer);
 // Plays out trick with first_player playing first. returns which player takes the trick
-player_position_t play_trick(hand_t hand, suit_t trump_suit, player_position_t first_player);
+player_position_t play_trick(GameState &game_state, hand_t hand, suit_t trump_suit, player_position_t first_player);
 
 int main() {
   player_position_t dealer = input_first_dealer();
+  GameState game_state(dealer);
 
   while(1) {
     hand_t hand = input_hand();
@@ -31,7 +32,7 @@ int main() {
     trump_decision_t trump_decision = decide_trump(hand, flip_card, dealer);
     suit_t trump_suit = trump_decision.suit;
     for (int i = 0; i < 5; ++i) {
-      first_player = play_trick(hand, trump_suit, first_player);
+      first_player = play_trick(game_state, hand, trump_suit, first_player);
     }
 
     increment_position(dealer);
@@ -254,8 +255,22 @@ trump_decision_t decide_trump(hand_t &hand, card_t flip_card, player_position_t 
 }
 
 // Plays out trick with first_player playing first. returns which player takes the trick
-player_position_t play_trick(hand_t hand, suit_t trump_suit, player_position_t first_player) {
-  return THIS_PLAYER;
+player_position_t play_trick(GameState &game_state, hand_t &hand, suit_t trump_suit, player_position_t first_player) {
+  player_position_t current_player = first_player;
+  for (int i = 0; i < 4; ++i) {
+    if (current_player == THIS_PLAYER) {
+      game_state.record_play(calculate_move(game_state, hand, trump_suit));
+    }
+    else {
+      cout << "Input play of "<<player_position_names[current_player]<<endl;
+      card_t play_card = input_card();
+      game_state.record_play(play_card, current_player);
+    }
+
+    increment_position(current_player);
+  }
+
+  return game_state.last_trick_winner();
 }
 
 

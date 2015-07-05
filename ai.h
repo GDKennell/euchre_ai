@@ -14,6 +14,8 @@ trump_decision_t calculate_second_trump_call(const hand_t &hand,
                                              card_t flip_card, 
                                              bool must_choose);
 
+card_t calculate_move(GameState &game_state, hand_t &hand, suit_t trump_suit);
+
 void swap_card(hand_t &hand, card_t flip_card);
 
 // returns heuristic value of card given trump

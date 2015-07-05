@@ -4,7 +4,7 @@
 #include <deque>
 extern const char *player_position_names[4];
 enum player_position_t {THIS_PLAYER, LEFT_OPPONENT, PARTNER, RIGHT_OPPONENT};
-void increment_position(player_position_t &position);
+player_position_t increment_position(player_position_t &position);
 
 extern const char *trump_call_names[3];
 enum trump_call_t {PASS, PICK_IT_UP, ALONE};

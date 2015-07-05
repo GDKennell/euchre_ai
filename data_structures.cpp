@@ -9,7 +9,7 @@ const char *trump_call_names[3] = {"Pass", "Pick it up", "Alone"};
 const char *suit_names[4] = {"Clubs", "Diamonds", "Hearts", "Spades"};
 const char *card_value_names[6] = {"9 ", "10", "J ", "Q ", "K ", "A "};
 
-void increment_position(player_position_t &position) {
+player_position_t increment_position(player_position_t &position) {
   switch (position) {
     case THIS_PLAYER:
       position = LEFT_OPPONENT;
@@ -24,6 +24,7 @@ void increment_position(player_position_t &position) {
       position = THIS_PLAYER;
       break;
   }
+  return position;
 }
 
 const char* card_str(const card_t &card) {
