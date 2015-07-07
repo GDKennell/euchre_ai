@@ -5,7 +5,7 @@
 
 using namespace std;
 
-typedef bool (*)(card_t, card_t, suit_t) card_comp_fn_t
+typedef bool (*card_comp_fn_t)(card_t, card_t, suit_t);
 
 bool is_left(const card_t &card, suit_t trump) {
   return (card.value == JACK && swap_color(card.suit) == trump);
@@ -141,7 +141,7 @@ bool card_is_higher(card_t card1, card_t card2, suit_t trump) {
 card_t find_extreme_card(const hand_t &hand, suit_t trump, card_comp_fn_t compare) {
   card_t extreme_card = hand[0];
   for (int i = 1; i < hand.size(); ++i) {
-    if (compare(hand[i], extreme_card)) {
+    if (compare(hand[i], extreme_card, trump)) {
       extreme_card = hand[i];
     }
   }
@@ -161,10 +161,10 @@ deque<card_t> find_highest_offsuit(const hand_t &hand, suit_t trump) {
   for (auto card: hand) {
     if (is_trump(card, trump))
       continue;
-    if (highest_offsuit.empty() || card.value == highest_offsuit.first().value) {
+    if (highest_offsuit.empty() || card.value == highest_offsuit.front().value) {
       highest_offsuit.push_back(card);
     }
-    else if (!highest_offsuit.empty() && card.value > highest_offsuit.first().value) {
+    else if (!highest_offsuit.empty() && card.value > highest_offsuit.front().value) {
       highest_offsuit.clear();
       highest_offsuit.push_back(card);
     }
@@ -193,7 +193,8 @@ card_t find_lowest_trump(const hand_t &hand, suit_t trump) {
 // Finds card in hand and removes it
 void remove_card(card_t card, hand_t &hand) {
   for (int i = 0; i < hand.size(); ++i) {
-    if (hand[i] == card) {
+    if (hand[i].value == card.value &&
+        hand[i].suit == card.suit) {
       hand.erase(hand.begin() + i);
       break;
     }
@@ -202,13 +203,13 @@ void remove_card(card_t card, hand_t &hand) {
 
 // Returns a deque same size as card_list with a count of how many
 // cards of that card's suit are in the hand (min 1 because of counting that card)
-deque<int> count_suits(const deque<card_t> &card_list, const hand_t &hand) {
+deque<int> count_suits(const deque<card_t> &card_list, const hand_t &hand, suit_t trump) {
   deque<int> suit_counts;
   suit_counts.resize(card_list.size());
   for (int i = 0; i < card_list.size(); ++i) {
     card_t list_card = card_list[i];
     for (auto hand_card: hand) {
-      if (effective_suit(list_card) == effective_suit(hand_card)) {
+      if (effective_suit(list_card, trump) == effective_suit(hand_card, trump)) {
         ++suit_counts[i];
       }
     }
@@ -229,11 +230,11 @@ int find_min_index(const deque<int>& list) {
 }
 
 // returns playabale cards from hand given suit that was led
-deque<card_t> legal_cards(const hand_t &hand, suit_t trick_suit) {
+deque<card_t> find_legal_cards(const hand_t &hand, suit_t trick_suit, suit_t trump) {
   bool can_follow_suit = false;
   deque<card_t> cards_of_suit;
   for (auto card: hand) {
-    if (effective_suit(card) == trick_suit) {
+    if (effective_suit(card, trump) == trick_suit) {
       can_follow_suit = true;
       cards_of_suit.push_back(card);
     }

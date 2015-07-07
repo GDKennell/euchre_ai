@@ -2,7 +2,6 @@
 
 #include "ai.h"
 #include "data_structures.h"
-#include "GameState.h"
 #include "util.h"
 
 using namespace std;
@@ -64,30 +63,37 @@ trump_decision_t calculate_second_trump_call(const hand_t &hand,
 
 card_t calculate_move(GameState &game_state, hand_t &hand, suit_t trump_suit) {
   if (game_state.leading_player() == THIS_PLAYER) {
+    cout<<"  calculating lead"<<endl;
     // Leading
     // Highest offsuit card(s), multiple only if tie
     deque<card_t> highest_offsuit_cards = find_highest_offsuit(hand, trump_suit);
 
     if (highest_offsuit_cards.empty()) {
       // if only trump in hand
+      cout<<"    only have trump"<<endl;
       card_t highest_trump = find_highest_trump(hand, trump_suit);
       card_t lowest_trump = find_lowest_trump(hand, trump_suit);
       if (card_value(game_state.highest_unplayed_trump(), trump_suit) <
-          card_value(highest_trump)) {
+          card_value(highest_trump, trump_suit)) {
+        //TODO: This isn't working: have the right but playing lowest trump
+        //      thinking we don't have the highest
+        cout<<"      playing highest trump because we have it"<<endl;
         // play that highest trump if we have it
         remove_card(highest_trump, hand);
         return highest_trump;
       }
       else {
         // else play lowest trump
+        cout<<"      playing lowest trump because we don't know where the highest is"<<endl;
         remove_card(lowest_trump, hand);
         return lowest_trump;
       }
     }
     else {
+      cout<<"    have offsuit, playing highest and trying to shortsuit"<<endl;
       // Find highest_offsuit card with lowest # of cards in its suit
       // count of cards in suit, indexed by highest_offsuit_cards
-      deque<int> suit_counts = count_suits(highest_offsuit_cards, hand);
+      deque<int> suit_counts = count_suits(highest_offsuit_cards, hand, trump_suit);
       int best_card_i = find_min_index(suit_counts);
       card_t best_card = highest_offsuit_cards[best_card_i];
       remove_card(best_card, hand);
@@ -95,27 +101,35 @@ card_t calculate_move(GameState &game_state, hand_t &hand, suit_t trump_suit) {
     }
   }
   else {
+    cout<<"  calculating follow"<<endl;
     // Following
     suit_t trick_suit = game_state.trick_suit();
-    deque<card_t> legal_cards = legal_cards(hand, trick_suit);
+    deque<card_t> legal_cards = find_legal_cards(hand, trick_suit, trump_suit);
     deque<card_t> winnable_cards = game_state.winnable_cards(legal_cards);
     if (winnable_cards.empty() || game_state.partner_is_winning_trick()) { 
+      if (winnable_cards.empty())
+        cout<<"    no way to win";
+      else
+        cout<<"    partner already winning";
+      cout<<": playing lowest legal card"<<endl;
       // If no way to win trick or partner has it, play lowest legal
-      worst_legal_card = find_lowest_card(legal_cards, trump_suit);
+      card_t worst_legal_card = find_lowest_card(legal_cards, trump_suit);
       remove_card(worst_legal_card, hand);
       return worst_legal_card;
     }
     else {
       // If can win
-      if (effective_suit(legal_cards.first()) == trick_suit) {
+      if (effective_suit(legal_cards.front(), trump_suit) == trick_suit) {
+        cout<<"    can win by following suit: playing highest of trick suit"<<endl;
         // If can win following suit, play highest of suit (trump included)
-        highest_winnable_card = find_highest_card(winnable_cards, trump_suit);
+        card_t highest_winnable_card = find_highest_card(winnable_cards, trump_suit);
         remove_card(highest_winnable_card, hand);
         return highest_winnable_card;
       }
       else {
+        cout<<"    can win by trumping, playing lowest trump"<<endl;
         // If can win by trumping (playing trump on offsuit trick), play lowest trump
-        lowest_winnable_card = find_lowest_card(winnable_cards, trump_suit);
+        card_t lowest_winnable_card = find_lowest_card(winnable_cards, trump_suit);
         remove_card(lowest_winnable_card, hand);
         return lowest_winnable_card;
       }
@@ -153,8 +167,8 @@ double trump_evaluation(const hand_t &hand,
     card_t card = hand[i];
     total_value += card_value(card, trump);
 
-    if (!suit_exists[effective_suit(card)]) {
-      suit_exists[card_suit] = true;
+    if (!suit_exists[effective_suit(card,trump)]) {
+      suit_exists[card.suit] = true;
       ++num_suits;
     }
   }
@@ -180,13 +194,13 @@ void swap_card(hand_t &hand, card_t flip_card) {
   }
 
   // Array of card indices that could be discarded to short-suit ourselves
-  deque<int> short_suit_cards;
+  deque<card_t> short_suit_cards;
   for (int i = 0; i < 4; ++i) {
     if (suit_counts[i] == 1) {
       // Find card that is only one of i suit
       for (int j = 0; j < 5; ++j) {
         if (hand[j].suit == (suit_t)i) {
-          short_suit_cards.push_back(j);
+          short_suit_cards.push_back(hand[j]);
           break;
         }
       }

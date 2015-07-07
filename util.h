@@ -29,7 +29,7 @@ int find_highest_card_index(const hand_t &hand, suit_t trump);
 // Same as find_highest_card but with lowest
 card_t find_lowest_card(const hand_t &hand, suit_t trump);
 
-deque<card_t> find_highest_offsuit(const hand_t &hand, suit_t trump);
+std::deque<card_t> find_highest_offsuit(const hand_t &hand, suit_t trump);
 card_t find_highest_trump(const hand_t &hand, suit_t trump);
 card_t find_lowest_trump(const hand_t &hand, suit_t trump);
 
@@ -38,13 +38,13 @@ void remove_card(card_t card, hand_t &hand);
 
 // Returns a deque same size as card_list with a count of how many
 // cards of that card's suit are in the hand (min 1 because of counting that card)
-deque<int> count_suits(const deque<card_t> &card_list, const hand_t &hand);
+std::deque<int> count_suits(const std::deque<card_t> &card_list, const hand_t &hand, suit_t trump);
 
 // Iterates through list and returns the index of the minimum
-int find_min_index(const deque<int>& list);
+int find_min_index(const std::deque<int>& list);
 
 // returns playabale cards from hand given suit that was led
-deque<card_t> legal_cards(const hand_t &hand, suit_t trick_suit);
+std::deque<card_t> find_legal_cards(const hand_t &hand, suit_t trick_suit, suit_t trump);
 
 
 

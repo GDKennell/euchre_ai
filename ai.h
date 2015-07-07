@@ -2,6 +2,7 @@
 #define AI_H
 
 #include "data_structures.h"
+#include "GameState.h"
 
 extern const double alone_threshold;
 extern const double call_it_threshold;

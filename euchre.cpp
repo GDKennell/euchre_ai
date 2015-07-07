@@ -16,7 +16,7 @@ card_t input_card();
 // Gameplay Helpers
 trump_decision_t decide_trump(hand_t &hand, card_t flip_card, player_position_t dealer);
 // Plays out trick with first_player playing first. returns which player takes the trick
-player_position_t play_trick(GameState &game_state, hand_t hand, suit_t trump_suit, player_position_t first_player);
+player_position_t play_trick(GameState &game_state, hand_t &hand, suit_t trump_suit, player_position_t first_player);
 
 int main() {
   player_position_t dealer = input_first_dealer();
@@ -25,11 +25,13 @@ int main() {
   while(1) {
     hand_t hand = input_hand();
     card_t flip_card = input_flip_card();
+    game_state.record_flip_card(flip_card);
 
     player_position_t first_player = dealer;
     increment_position(first_player);
 
     trump_decision_t trump_decision = decide_trump(hand, flip_card, dealer);
+    game_state.record_trump_call(trump_decision);
     suit_t trump_suit = trump_decision.suit;
     for (int i = 0; i < 5; ++i) {
       first_player = play_trick(game_state, hand, trump_suit, first_player);
@@ -89,9 +91,11 @@ card_t input_card() {
     }
     switch (card_input_str[0]) {
       case '9':
+      case 'n':
         new_card.value = NINE;
         break;
       case '1':
+      case 't':
         new_card.value = TEN;
         break;
       case 'j':
@@ -259,7 +263,9 @@ player_position_t play_trick(GameState &game_state, hand_t &hand, suit_t trump_s
   player_position_t current_player = first_player;
   for (int i = 0; i < 4; ++i) {
     if (current_player == THIS_PLAYER) {
-      game_state.record_play(calculate_move(game_state, hand, trump_suit));
+      card_t comp_move = calculate_move(game_state, hand, trump_suit);
+      cout<<"My play: "<<card_str(comp_move)<<endl;
+      game_state.record_play(comp_move, THIS_PLAYER);
     }
     else {
       cout << "Input play of "<<player_position_names[current_player]<<endl;
@@ -270,6 +276,8 @@ player_position_t play_trick(GameState &game_state, hand_t &hand, suit_t trump_s
     increment_position(current_player);
   }
 
+  player_position_t winner = game_state.last_trick_winner();
+  cout<<"Trick winner: "<< player_position_names[winner]<<endl;
   return game_state.last_trick_winner();
 }
 
